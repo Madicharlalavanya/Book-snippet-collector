@@ -1,0 +1,137 @@
+
+
+/* General body and HTML styles */
+body.no-scroll {
+  overflow: hidden;
+}
+
+/* General body and HTML styles that are safe for all pages */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* Main container for the landing page */
+.landing-page {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-image: url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1950&q=80');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Full-page overlay with a slight blur for the background image */
+.landing-page::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(78, 68, 68, 0.15); /* Darkening overlay */
+  
+  z-index: 0; /* Places the overlay behind all other content */
+}
+
+/* Shared styles for Header (navbar) and Footer */
+.navbar, .footer {
+  background-color: rgba(3, 2, 2, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  position: relative; /* Changed from absolute/fixed to relative for flow */
+  z-index: 1; /* Ensures header/footer are above the ::before overlay */
+  color: white;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+}
+
+.logo {
+  font-weight: 600;
+  color: white;
+}
+
+.login-button {
+  background-color: #1976d2;
+  color: white;
+  text-transform: none;
+  font-weight: 500;
+}
+
+/* Main content area - acts as a flex container */
+.main-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  position: relative;
+  z-index: 1; /* Ensures content is above the ::before overlay */
+}
+
+/*
+  CORRECTION: The following rules were removed as they are redundant.
+  The JS file uses a specific <div className="main-box"> to hold the content,
+  so styling that element directly is cleaner and more accurate.
+  - .main-content::before
+  - .main-content h2
+  - .main-content h6
+*/
+
+/* The central content box with its own background and blur */
+.main-box {
+  background-color: rgba(255, 255, 255, 0.75); /* Light, semi-transparent box */
+  padding: 2rem 3rem;
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 8px MuiBox-root css-k008qs20px rgba(0, 0, 0, 0.1);
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.main-box h2 {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #000;
+  margin-bottom: 1rem;
+}
+
+.main-box h6 {
+  font-size: 1.125rem;
+  font-weight: 400;
+  color: #333;
+  margin: 0.5rem 0;
+  max-width: 700px; /* Kept from the old rule for good line length */
+}
+
+.cta-button {
+  background-color: #1976d2;
+  color: white; /* CORRECTED: Text color changed to white for better contrast */
+  font-weight: 500;
+  padding: 0.75rem 2rem;
+  border-radius: 6px;
+  text-transform: none;
+  transition: background 0.3s ease;
+}
+
+.cta-button:hover {
+  background-color: #1565c0;
+}
+
+/* Footer specific styles */
+.footer {
+  justify-content: center;
+}
+
+/* Styles the div inside the footer from the JS file */
+.footer-content {
+  text-align: center;
+}

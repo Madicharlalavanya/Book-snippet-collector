@@ -1,0 +1,56 @@
+/* Main container for the settings page */
+.settings-page-container {
+  padding-top: 2rem;
+  padding-bottom: 4rem;
+}
+
+/* A container for all the setting cards to manage spacing */
+.settings-sections-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* Space between each settings card */
+}
+
+/* Individual card for each setting section */
+.settings-section-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap; /* Allow content to wrap on small screens */
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px !important; /* Override default Paper radius if needed */
+}
+
+/* Container for the text content (title and description) */
+.settings-section-content {
+  flex: 1 1 300px; /* Allows the content to grow and shrink */
+}
+
+/* Container for the action buttons */
+.settings-section-actions {
+  flex-shrink: 0; /* Prevents the button from shrinking */
+}
+
+/* --- Media Query for Responsiveness --- */
+@media (max-width: 600px) {
+  .settings-section-card {
+    flex-direction: column; /* Stack content and actions vertically */
+    align-items: flex-start; /* Align everything to the left */
+  }
+
+  .settings-section-actions {
+    width: 100%; /* Make the button container take full width */
+  }
+
+  .settings-section-actions .MuiButton-root {
+    width: 100%; /* Make the button itself take full width */
+  }
+}
+
+/* Add this to the bottom of SettingsPage.css or a global CSS file */
+
+.MuiModal-root {
+  z-index: 1300 !important; /* A high z-index to ensure it's on top */
+}
