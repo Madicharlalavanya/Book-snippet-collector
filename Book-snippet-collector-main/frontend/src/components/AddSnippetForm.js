@@ -6,7 +6,10 @@ import {
 import { PhotoCamera } from '@mui/icons-material';
 // No need to import Dashboard.css here if it's imported in a higher-level component like App.js
 
-const EMOTION_TAGS = ["Inspiration", "Humor", "Wisdom", "Love", "Sadness", "Motivation"];
+const EMOTION_TAGS = [
+  "Inspiration", "Motivation", "Wisdom", "Humor", "Love", "Sadness",
+  "Courage", "Hope", "Reflection", "Adventure", "Nostalgia", "Peace"
+];
 const initialFormData = { text: '', author: '', bookName: '', pageNo: '', emotion: '', description: '' };
 
 const AddSnippetForm = ({ open, onClose, apiClient, onSnippetAdded }) => {

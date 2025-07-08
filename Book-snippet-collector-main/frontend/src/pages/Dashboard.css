@@ -12,7 +12,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap; /* Allows items to wrap on smaller screens */
+  flex-wrap: wrap;
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -44,7 +44,7 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   border: 1px solid #e9ecef;
   width: 100%;
-  max-width: 850px; /* Controls the max width of the filter bar */
+  max-width: 850px;
   align-items: center;
 }
 
@@ -62,18 +62,36 @@ body {
   margin-bottom: 2.5rem;
 }
 
-/* --- Snippet Cards Grid --- */
+/*
+============================================================
+*
+*   SNIPPET CARD STYLES (CORRECTED)
+*
+============================================================
+*/
+
+/* --- The Grid Container --- */
 .snippets-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
 }
 
+/* --- The Grid Item (Wrapper) --- */
+/* This is now the visible card element */
 .snippet-card-wrapper {
   cursor: pointer;
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-  border-radius: 12px; /* Apply border-radius to the wrapper for the hover effect */
+  border-radius: 12px;
   height: 100%;
+  
+  /* ✨ FIX: The background, border, and shadow are moved here */
+  background-color: #ffffff;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  
+  display: flex;
+  flex-direction: column;
 }
 
 .snippet-card-wrapper:hover {
@@ -81,11 +99,11 @@ body {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
+/* --- The Inner Content Container (Paper) --- */
+/* This is now just for padding and internal layout */
 .snippet-card {
-  background-color: #ffffff;
   padding: 1.5rem;
-  border-radius: 12px;
-  height: 100%;
+  flex-grow: 1; /* Makes the content area fill the card */
   display: flex;
   flex-direction: column;
 }
@@ -95,11 +113,11 @@ body {
   font-size: 1.1rem;
   color: #343a40;
   line-height: 1.6;
-  flex-grow: 1; /* Allows this element to take up space, pushing meta to bottom */
+  flex-grow: 1; /* Pushes the metadata to the bottom */
 
   /* Truncate text for the preview card */
   display: -webkit-box;
-  -webkit-line-clamp: 4; /* Show up to 4 lines of text */
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -110,21 +128,30 @@ body {
   color: #6c757d;
 }
 
-/* --- Modal Styling --- */
+
+/*
+============================================================
+*
+*   MODAL STYLING
+*
+============================================================
+*/
+
+/* --- Details Modal --- */
 .details-modal-box {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 90%;
-  max-width: 650px; /* A good width for viewing details */
+  max-width: 650px;
   background-color: #fff;
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.1);
   padding: 2rem;
   outline: none;
   max-height: 90vh;
-  overflow-y: auto; /* Allows modal content to scroll if it's too long */
+  overflow-y: auto;
 }
 
 .modal-image {
@@ -135,40 +162,20 @@ body {
   max-height: 400px;
 }
 
-/* Let the modal text be fully visible, overriding truncation */
+/* Override text truncation inside the details modal */
 .details-modal-box .snippet-card-text {
   display: block;
   -webkit-line-clamp: unset;
 }
 
-/* No Snippets Message */
-.no-snippets-paper {
-  padding: 3rem;
-  text-align: center;
-  background-color: #ffffff;
-  border-radius: 12px;
-  border: 2px dashed #dee2e6;
-}
-
-/* --- Media Queries for Responsiveness --- */
-@media (max-width: 768px) {
-  .dashboard-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .advanced-filters {
-    flex-direction: column;
-    align-items: stretch; /* Make filter items full-width on mobile */
-  }
-}
-
+/* --- Add Snippet Modal --- */
 .add-snippet-modal-box {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 90%;
-  max-width: 550px; /* A good size for a form */
+  max-width: 550px;
   background-color: #ffffff;
   border: none;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
@@ -196,30 +203,41 @@ body {
   border-top: 1px solid #e9ecef;
 }
 
-/* --- Targeting MUI TextFields inside the Add Snippet Modal --- */
-
-/* Style the default (unfocused) border */
+/* Styles for MUI TextFields inside the Add Snippet Modal */
 .add-snippet-modal-box .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
-  border-color: #ced4da; /* A clearly visible but soft gray */
+  border-color: #ced4da;
 }
-
-/* Style the border on hover */
 .add-snippet-modal-box .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
-  border-color: #868e96; /* Darker gray on hover */
+  border-color: #868e96;
 }
-
-/* Style the border when the field is focused (clicked into) */
 .add-snippet-modal-box .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
-  border-width: 2px; /* Make the border thicker on focus */
-  border-color: #1976d2; /* Use MUI's primary blue color */
+  border-width: 2px;
+  border-color: #1976d2;
 }
-
-/* Style the floating label */
 .add-snippet-modal-box .MuiInputLabel-root {
-  color: #495057; /* A darker gray for better readability */
+  color: #495057;
+}
+.add-snippet-modal-box .MuiInputLabel-root.Mui-focused {
+  color: #1976d2;
 }
 
-/* Style the label when the field is focused */
-.add-snippet-modal-box .MuiInputLabel-root.Mui-focused {
-  color: #1976d2; /* Match the primary blue color */
+/* --- "No Snippets" Message --- */
+.no-snippets-paper {
+  padding: 3rem;
+  text-align: center;
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 2px dashed #dee2e6;
+}
+
+/* --- Media Queries for Responsiveness --- */
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .advanced-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }

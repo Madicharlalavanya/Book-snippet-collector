@@ -4,11 +4,11 @@
   padding-bottom: 4rem;
 }
 
-/* A container for all the setting cards to manage spacing */
+/* Container for all the setting cards */
 .settings-sections-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* Space between each settings card */
+  gap: 1.5rem;
 }
 
 /* Individual card for each setting section */
@@ -16,41 +16,118 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap; /* Allow content to wrap on small screens */
+  flex-wrap: wrap;
   gap: 1rem;
   padding: 1.5rem 2rem;
   border: 1px solid #e0e0e0;
-  border-radius: 12px !important; /* Override default Paper radius if needed */
+  border-radius: 12px !important;
 }
 
-/* Container for the text content (title and description) */
 .settings-section-content {
-  flex: 1 1 300px; /* Allows the content to grow and shrink */
+  flex: 1 1 300px;
 }
 
-/* Container for the action buttons */
 .settings-section-actions {
-  flex-shrink: 0; /* Prevents the button from shrinking */
+  flex-shrink: 0;
+}
+
+/* User identity display at the top of the page */
+.user-identity-display {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+/*
+============================================================
+*
+*   EDIT PROFILE MODAL STYLES (CORRECTED & ENHANCED)
+*
+============================================================
+*/
+
+/* ✨ FIX: Ensure the MUI Modal root is on top of everything */
+.MuiModal-root {
+  z-index: 1300 !important;
+}
+
+/* Main box for the modal content */
+.edit-profile-modal-box {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 550px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  outline: none;
+  max-height: 90vh;
+  overflow-y: auto;
+  /* Remove default padding to structure it ourselves */
+  padding: 0;
+}
+
+.edit-profile-modal-box .form-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.edit-profile-modal-box .form-content {
+  padding: 1.5rem 2rem;
+}
+
+.edit-profile-modal-box .form-actions {
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  background-color: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+
+/* Profile Picture Uploader Styles */
+.profile-picture-uploader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.profile-avatar {
+  width: 80px !important;
+  height: 80px !important;
+  font-size: 2rem !important;
+  border: 1px solid #e0e0e0;
+}
+
+.profile-avatar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 /* --- Media Query for Responsiveness --- */
 @media (max-width: 600px) {
   .settings-section-card {
-    flex-direction: column; /* Stack content and actions vertically */
-    align-items: flex-start; /* Align everything to the left */
+    flex-direction: column;
+    align-items: flex-start;
   }
-
   .settings-section-actions {
-    width: 100%; /* Make the button container take full width */
+    width: 100%;
   }
-
   .settings-section-actions .MuiButton-root {
-    width: 100%; /* Make the button itself take full width */
+    width: 100%;
   }
-}
-
-/* Add this to the bottom of SettingsPage.css or a global CSS file */
-
-.MuiModal-root {
-  z-index: 1300 !important; /* A high z-index to ensure it's on top */
+  .edit-profile-modal-box {
+    width: 95%;
+  }
+  .edit-profile-modal-box .form-header,
+  .edit-profile-modal-box .form-content,
+  .edit-profile-modal-box .form-actions {
+    padding: 1rem 1.5rem;
+  }
 }

@@ -1,7 +1,29 @@
 const User = require('../models/User');
+const Snippet = require('../models/Snippet'); // ✨ FIX: Added missing import for Snippet model
+const cloudinary = require('../config/cloudinary'); // ✨ FIX: Added missing import for Cloudinary config
 const sendEmail = require('../utils/mailer');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+
+
+// --- HELPER FUNCTIONS ---
+
+// Helper function to upload files to Cloudinary
+const uploadToCloudinary = (fileBuffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { resource_type: "image", folder: folder },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+    uploadStream.end(fileBuffer);
+  });
+};
+
+
+// --- EXPORTED CONTROLLERS ---
 
 // --- PASSWORD MANAGEMENT ---
 
@@ -38,7 +60,7 @@ exports.resetPassword = async (req, res) => {
     if (!user) {
       return res.status(400).json({ message: 'Token is invalid or has expired.' });
     }
-    user.password = req.body.password; // The pre-save hook will hash it
+    user.password = req.body.password;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save();
@@ -47,37 +69,53 @@ exports.resetPassword = async (req, res) => {
       res.status(200).json({ message: 'Password changed successfully.' });
     });
   } catch (err) {
+    console.error('--- RESET PASSWORD CONTROLLER ERROR ---', err);
     res.status(500).json({ message: 'Server error while resetting password.' });
   }
 };
 
-// --- ✨ NEW: USER PROFILE MANAGEMENT ---
 
-// @desc    Get current logged-in user's details
-// @route   GET /api/user/me
+// --- USER PROFILE MANAGEMENT ---
+
+// GET /api/user/me
 exports.getMe = async (req, res) => {
   try {
-    // req.user is populated by Passport from the session
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+    if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: 'Not authenticated' });
     }
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found.' });
     res.status(200).json({ user });
   } catch (error) {
     res.status(500).json({ message: 'Server error fetching user details.' });
   }
 };
 
-// @desc    Update user details (e.g., name)
-// @route   PATCH /api/user/update-details
+// PATCH /api/user/update-details
 exports.updateUserDetails = async (req, res) => {
   try {
-    const { name } = req.body;
-    // We only allow updating the 'name' field from this endpoint for security.
-    const fieldsToUpdate = { name };
+    if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: 'Not authenticated' });
+    }
+    const { name, bio } = req.body;
+    const fieldsToUpdate = {};
+
+    if (name !== undefined) fieldsToUpdate.name = name;
+    if (bio !== undefined) fieldsToUpdate.bio = bio;
+
+    if (req.file) {
+      const currentUser = await User.findById(req.user.id);
+      if (currentUser && currentUser.profilePictureCloudinaryId) {
+        await cloudinary.uploader.destroy(currentUser.profilePictureCloudinaryId);
+      }
+
+      const result = await uploadToCloudinary(req.file.buffer, 'profile_pictures');
+      fieldsToUpdate.profilePictureUrl = result.secure_url;
+      fieldsToUpdate.profilePictureCloudinaryId = result.public_id;
+    }
 
     const updatedUser = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
-      new: true, // Return the updated document
+      new: true,
       runValidators: true,
     });
 
@@ -89,6 +127,50 @@ exports.updateUserDetails = async (req, res) => {
       user: updatedUser,
     });
   } catch (error) {
+    console.error('--- UPDATE USER DETAILS ERROR ---', error);
     res.status(500).json({ message: 'Server error while updating profile.' });
+  }
+};
+
+// DELETE /api/user/delete-account
+exports.deleteAccount = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: 'Not authenticated' });
+    }
+    const userId = req.user.id;
+    const currentUser = await User.findById(userId);
+
+    // Delete all snippet images from Cloudinary
+    const userSnippets = await Snippet.find({ user: userId });
+    if (userSnippets.length > 0) {
+      const cloudinaryIds = userSnippets
+        .map(snippet => snippet.cloudinaryId)
+        .filter(id => id);
+      if (cloudinaryIds.length > 0) {
+        await cloudinary.api.delete_resources(cloudinaryIds);
+      }
+    }
+
+    // Delete the user's profile picture
+    if (currentUser && currentUser.profilePictureCloudinaryId) {
+      await cloudinary.uploader.destroy(currentUser.profilePictureCloudinaryId);
+    }
+    
+    // Delete all snippets from MongoDB
+    await Snippet.deleteMany({ user: userId });
+
+    // Delete the user document itself
+    await User.findByIdAndDelete(userId);
+
+    req.logout(function(err) {
+      if (err) console.error("Error during logout after account deletion:", err);
+      res.clearCookie('connect.sid');
+      res.status(200).json({ message: 'Account and all associated data have been permanently deleted.' });
+    });
+
+  } catch (error) {
+    console.error('--- DELETE ACCOUNT CONTROLLER ERROR ---', error);
+    res.status(500).json({ message: 'Server error while deleting account.' });
   }
 };

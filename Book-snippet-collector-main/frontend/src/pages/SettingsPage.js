@@ -1,45 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import {
   Container, Typography, Paper, Box, Button, Divider, Dialog, DialogActions,
-  DialogContent, DialogContentText, DialogTitle, Modal, TextField, CircularProgress, Alert
+  DialogContent, DialogContentText, DialogTitle, Modal, TextField, CircularProgress, Alert, Avatar
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { PhotoCamera } from '@mui/icons-material';
 import axios from 'axios';
-import './SettingsPage.css'; // Make sure this CSS file exists and is styled
+import './SettingsPage.css';
 
-const apiClient = axios.create({
-  baseURL: 'http://localhost:5000',
-  withCredentials: true,
-});
+const apiClient = axios.create({ baseURL: 'http://localhost:5000', withCredentials: true });
 
 const SettingsPage = () => {
   const navigate = useNavigate();
 
-  // State for user data and page loading
+  // State for user data, modals, and forms
   const [user, setUser] = useState(null);
   const [pageLoading, setPageLoading] = useState(true);
-
-  // State for the "Edit Profile" modal
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [name, setName] = useState('');
-
-  // State for the "Delete Account" confirmation dialog
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
-  // State for form submission feedback
-  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [bio, setBio] = useState('');
+  const [profilePictureFile, setProfilePictureFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [formLoading, setFormLoading] = useState(false);
   const [formMessage, setFormMessage] = useState({ type: '', text: '' });
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
-  // --- Data Fetching ---
+  // Fetch current user data when the page loads
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const response = await apiClient.get('/api/user/me');
-        setUser(response.data.user);
-        setName(response.data.user.name || ''); // Pre-fill name for the edit form
+        const userData = response.data.user;
+        setUser(userData);
+        setName(userData.name || '');
+        setBio(userData.bio || '');
+        setPreviewImage(userData.profilePictureUrl);
       } catch (error) {
-        console.error("Failed to fetch user data. Redirecting to login.", error);
-        navigate('/login'); // Redirect if not authenticated
+        navigate('/login');
       } finally {
         setPageLoading(false);
       }
@@ -47,155 +46,165 @@ const SettingsPage = () => {
     fetchUser();
   }, [navigate]);
 
-  // --- Handlers ---
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfilePictureFile(file);
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
+
   const handleOpenProfileModal = () => {
-    setFormMessage({ type: '', text: '' }); // Clear previous messages before opening
+    setName(user?.name || '');
+    setBio(user?.bio || '');
+    setPreviewImage(user?.profilePictureUrl);
+    setProfilePictureFile(null);
+    setFormMessage({ type: '', text: '' });
     setIsProfileModalOpen(true);
   };
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
-    setFormSubmitting(true);
+    setFormLoading(true);
     setFormMessage({ type: '', text: '' });
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('bio', bio);
+    if (profilePictureFile) {
+      formData.append('profilePicture', profilePictureFile);
+    }
     try {
-      const response = await apiClient.patch('/api/user/update-details', { name });
-      setUser(response.data.user); // Update user state with the new data from the server
+      const response = await apiClient.patch('/api/user/update-details', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setUser(response.data.user);
       setFormMessage({ type: 'success', text: 'Profile updated successfully!' });
-      
-      // Close the modal after a short delay to show the success message
-      setTimeout(() => {
-        setIsProfileModalOpen(false);
-      }, 1500);
-
+      setTimeout(() => setIsProfileModalOpen(false), 1500);
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Failed to update profile. Please try again.';
-      setFormMessage({ type: 'error', text: errorMessage });
+      setFormMessage({ type: 'error', text: 'Failed to update profile.' });
     } finally {
-      setFormSubmitting(false);
+      setFormLoading(false);
     }
   };
 
   const handleDeleteAccount = async () => {
-    // In a real app, you would add an API call here, e.g., apiClient.delete('/api/user/delete-account')
-    console.log("Account deletion initiated...");
-    setIsDeleteDialogOpen(false);
-    // After successful deletion, you would force a logout and redirect.
-    // navigate('/login');
+    setDeleteLoading(true);
+    setDeleteError('');
+    try {
+      await apiClient.delete('/api/user/delete-account');
+      navigate('/');
+    } catch (error) {
+      setDeleteError(error.response?.data?.message || "Could not delete account.");
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
-  // --- Render Logic ---
   if (pageLoading) {
-    return (
-      <Container sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
-        <CircularProgress size={60} />
-      </Container>
-    );
+    return <Container sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Container>;
   }
 
   return (
     <>
       {/* Edit Profile Modal */}
-      <Modal open={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)}>
-        {/* Assumes a .modal-box class in your CSS for styling */}
-        <Box className="modal-box"> 
-          <Typography variant="h6" component="h2" gutterBottom>Edit Profile</Typography>
-          
+      <Modal open={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} sx={{ zIndex: 1300 }}>
+        {/* ✨ UPDATED: The Box now uses the correct class name and has a structured form inside */}
+        <Box className="edit-profile-modal-box">
           <form onSubmit={handleProfileUpdate}>
-            <TextField
-              label="Full Name"
-              fullWidth
-              margin="normal"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={formSubmitting}
-            />
-            <TextField
-              label="Email Address"
-              fullWidth
-              margin="normal"
-              value={user?.email || ''}
-              disabled // Email should not be editable
-              helperText="Email addresses cannot be changed."
-            />
-            
-            {formMessage.text && <Alert severity={formMessage.type} sx={{ mt: 2 }}>{formMessage.text}</Alert>}
+            <Box className="form-header">
+              <Typography variant="h6" component="h2">Edit Profile</Typography>
+            </Box>
 
-            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-              <Button onClick={() => setIsProfileModalOpen(false)} disabled={formSubmitting}>Cancel</Button>
-              <Button type="submit" variant="contained" disabled={formSubmitting}>
-                {formSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Save Changes'}
+            <Box className="form-content">
+              {formMessage.text && <Alert severity={formMessage.type} sx={{mb: 2}}>{formMessage.text}</Alert>}
+
+              <Box className="profile-picture-uploader">
+                <Avatar src={previewImage} className="profile-avatar">
+                  {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
+                </Avatar>
+                <Box className="profile-avatar-actions">
+                  <Button component="label" startIcon={<PhotoCamera />} size="small">
+                    Upload Photo
+                    <input type="file" hidden onChange={handleFileChange} accept="image/*" />
+                  </Button>
+                  <Typography variant="caption">JPG, PNG up to 5MB.</Typography>
+                </Box>
+              </Box>
+
+              <TextField label="Full Name" fullWidth margin="normal" value={name} onChange={(e) => setName(e.target.value)} disabled={formLoading} />
+              <TextField label="Bio / Description" fullWidth margin="normal" multiline rows={3} value={bio} onChange={(e) => setBio(e.target.value)} disabled={formLoading} placeholder="Tell us a little about yourself..." />
+              <TextField label="Email Address" fullWidth margin="normal" value={user?.email || ''} disabled helperText="Email cannot be changed." />
+            </Box>
+
+            <Box className="form-actions">
+              <Button onClick={() => setIsProfileModalOpen(false)} disabled={formLoading}>Cancel</Button>
+              <Button type="submit" variant="contained" disabled={formLoading}>
+                {formLoading ? <CircularProgress size={24} /> : 'Save Changes'}
               </Button>
             </Box>
           </form>
         </Box>
       </Modal>
 
-      {/* Delete Account Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onClose={() => setIsDeleteDialogOpen(false)}>
+      {/* Delete Account Dialog */}
+      <Dialog open={isDeleteDialogOpen} onClose={() => !deleteLoading && setIsDeleteDialogOpen(false)}>
         <DialogTitle>Are you absolutely sure?</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            This action is permanent and cannot be undone. This will permanently delete your account
-            and remove all your snippet data from our servers.
+            This action is permanent. This will delete your account and all your snippet data.
           </DialogContentText>
+          {deleteError && <Alert severity="error" sx={{ mt: 2 }}>{deleteError}</Alert>}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDeleteAccount} color="error" variant="contained">
-            Confirm Deletion
+          <Button onClick={() => setIsDeleteDialogOpen(false)} disabled={deleteLoading}>Cancel</Button>
+          <Button onClick={handleDeleteAccount} color="error" variant="contained" disabled={deleteLoading}>
+            {deleteLoading ? <CircularProgress size={24} color="inherit" /> : 'Confirm Deletion'}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Main Settings Page Content */}
       <Container maxWidth="md" className="settings-page-container">
-        <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 600 }}>
-          Account Settings
-        </Typography>
+        <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 600 }}>Account Settings</Typography>
+        
+        <Box className="user-identity-display">
+          <Avatar src={user?.profilePictureUrl} sx={{ width: 64, height: 64, fontSize: '2rem' }}>
+            {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
+          </Avatar>
+          <Box>
+            <Typography variant="h6">{user?.name || "User"}</Typography>
+            <Typography color="text.secondary">{user?.email}</Typography>
+          </Box>
+        </Box>
 
         <Box className="settings-sections-wrapper">
-          {/* Section 1: Profile Information */}
           <Paper component="section" className="settings-section-card" variant="outlined">
             <Box className="settings-section-content">
-              <Typography variant="h6" component="h2">Profile Information</Typography>
-              <Typography color="text.secondary">
-                {user?.name ? `Logged in as ${user.name} (${user.email})` : "Update your personal details."}
-              </Typography>
+              <Typography variant="h6">Profile</Typography>
+              <Typography color="text.secondary">Update your name, bio, and profile picture.</Typography>
             </Box>
             <Box className="settings-section-actions">
               <Button variant="outlined" onClick={handleOpenProfileModal}>Edit Profile</Button>
             </Box>
           </Paper>
 
-          {/* Section 2: Change Password */}
           <Paper component="section" className="settings-section-card" variant="outlined">
             <Box className="settings-section-content">
-              <Typography variant="h6" component="h2">Password</Typography>
-              <Typography color="text.secondary">
-                Change your password or set one if you signed up with Google.
-              </Typography>
+              <Typography variant="h6">Password</Typography>
+              <Typography color="text.secondary">Change your password or set one if you used Google to sign up.</Typography>
             </Box>
             <Box className="settings-section-actions">
-              <Button variant="contained" onClick={() => navigate('/forgot-password')}>
-                Change Password
-              </Button>
+              <Button variant="contained" onClick={() => navigate('/forgot-password')}>Change Password</Button>
             </Box>
           </Paper>
           
-          {/* Section 3: Delete Account */}
           <Paper component="section" className="settings-section-card" variant="outlined">
             <Box className="settings-section-content">
-              <Typography variant="h6" component="h2" color="error">
-                Delete Account
-              </Typography>
-              <Typography color="text.secondary">
-                Permanently delete your account and all associated data.
-              </Typography>
+              <Typography variant="h6" color="error">Delete Account</Typography>
+              <Typography color="text.secondary">Permanently delete your account and all associated data.</Typography>
             </Box>
             <Box className="settings-section-actions">
-              <Button variant="contained" color="error" onClick={() => setIsDeleteDialogOpen(true)}>
-                Delete My Account
-              </Button>
+              <Button variant="contained" color="error" onClick={() => setIsDeleteDialogOpen(true)}>Delete My Account</Button>
             </Box>
           </Paper>
         </Box>

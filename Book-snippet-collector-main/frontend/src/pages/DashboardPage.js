@@ -15,8 +15,10 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
-const EMOTION_TAGS = ["Inspiration", "Humor", "Wisdom", "Love", "Sadness", "Motivation"];
-
+const EMOTION_TAGS = [
+  "Inspiration", "Motivation", "Wisdom", "Humor", "Love", "Sadness", 
+  "Courage", "Hope", "Reflection", "Adventure", "Nostalgia", "Peace"
+];
 function useDebounce(value, delay) {
   const [debouncedValue, setDebouncedValue] = useState(value);
   useEffect(() => {
@@ -88,11 +90,12 @@ const DashboardPage = () => {
     }
   };
 
-  const handlePickRandom = async () => {
+    const handlePickRandom = async () => {
     try {
       const response = await apiClient.get('/api/snippets/random');
       setSelectedSnippet(response.data); // Open the details modal with the random snippet
     } catch (err) {
+      // Display the specific error message from the backend
       alert(err.response?.data?.message || "Could not fetch a random snippet.");
     }
   };
